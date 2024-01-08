@@ -10,6 +10,7 @@
         "maxy",
         "mgrs",
         "miny",
+        "multiprocess",
         "ndarray",
         "numpy",
         "pystac",
