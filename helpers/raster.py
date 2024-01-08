@@ -51,6 +51,9 @@ def rasterize_scenes(
     """
 
     # Rasterize each polygon
+    rasters = []
+    raster_bounds = []
+
     for polygon in gdf.geometry:
         bbox = polygon.bounds
         bbox_width = int((bbox[2] - bbox[0]) / resolution)
@@ -67,26 +70,33 @@ def rasterize_scenes(
             bbox, x_min, y_max, resolution
         )
 
-        # Ensure the dimensions match exactly for the global slice
-        global_slice = global_raster[
-            row_start : row_start + (row_end - row_start),
-            col_start : col_start + (col_end - col_start),
-        ]
+        rasters.append(rasterized)
+        raster_bounds.append((row_start, row_end, col_start, col_end))
 
-        # Adjust the dimensions of the rasterized array to match the global raster
-        rasterized_adjusted = np.zeros(global_slice.shape).astype("uint16")
-        min_height, min_width = min(
-            rasterized_adjusted.shape[0], rasterized.shape[0]
-        ), min(rasterized_adjusted.shape[1], rasterized.shape[1])
-        rasterized_adjusted[:min_height, :min_width] = rasterized[
-            :min_height, :min_width
-        ]
+    min_row = np.min([r[0] for r in raster_bounds])
+    max_row = np.max([r[1] for r in raster_bounds])
 
-        # Add the adjusted rasterized array to the global slice
-        global_raster[
-            row_start : row_start + rasterized_adjusted.shape[0],
-            col_start : col_start + rasterized_adjusted.shape[1],
-        ] += rasterized_adjusted
+    min_col = np.min([r[2] for r in raster_bounds])
+    max_col = np.max([r[3] for r in raster_bounds])
+
+    scene_raster = np.zeros((max_row - min_row, max_col - min_col)).astype("uint16")
+
+    # Add the rasterized polygon to the global raster
+    for rasterized, (row_start, row_end, col_start, col_end) in zip(
+        rasters, raster_bounds
+    ):
+        scene_raster[
+            row_start - min_row : row_start - min_row + rasterized.shape[0],
+            col_start - min_col : col_start - min_col + rasterized.shape[1],
+        ] += rasterized
+
+    global_raster_slice = global_raster[min_row:max_row, min_col:max_col]
+
+    global_raster_slice = np.where(
+        scene_raster > global_raster_slice, scene_raster, global_raster_slice
+    ).astype("uint16")
+
+    global_raster[min_row:max_row, min_col:max_col] = global_raster_slice
 
     return global_raster
 

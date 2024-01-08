@@ -1,6 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import geopandas as gpd
 import numpy as np
@@ -39,15 +39,13 @@ def process_scene(
     return rasterize_scenes(extents, global_raster, resolution, x_min, y_max)
 
 
-def get_s2_revisit_frequency(
-    export_path: Path = Path.cwd() / "Output.tif",
+def build_revisit_raster(
+    export_path: Union[Path, str] = Path.cwd() / "Output.tif",
     resolution: float = 0.00278,
     min_year: int = 2023,
     max_year: int = 2023,
-    x_min: float = -180.0,
-    y_min: float = -90.0,
-    x_max: float = 180.0,
-    y_max: float = 90.0,
+    count_limit: Optional[int] = None,
+    debug_mode: bool = False,
 ) -> None:
     """
     Downloads the Sentinel-2 index, calculates the extent of a global raster based
@@ -73,36 +71,56 @@ def get_s2_revisit_frequency(
     """
     s2_index_path = download_index()
     s2_index_gdf = gpd.read_file(s2_index_path)
+    bounds = s2_index_gdf.total_bounds
+    bounds_buffer = 1.2
+    x_min, y_min, x_max, y_max = (
+        bounds[0] * bounds_buffer,
+        bounds[1] * bounds_buffer,
+        bounds[2] * bounds_buffer,
+        bounds[3] * bounds_buffer,
+    )
+    if count_limit is not None:
+        s2_index_gdf = s2_index_gdf.head(count_limit)
 
     width = int((x_max - x_min) / resolution)
     height = int((y_max - y_min) / resolution)
     global_raster = np.zeros((height, width), dtype=np.uint16)
 
-    # Create a ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = []
-
-        # Submit tasks to the executor
-        for _, row in s2_index_gdf.iterrows():
-            futures.append(
-                executor.submit(
-                    process_scene,
-                    row,
-                    min_year,
-                    max_year,
-                    global_raster,
-                    resolution,
-                    x_min,
-                    y_max,
-                )
+    if debug_mode:
+        for _, row in tqdm(s2_index_gdf.iterrows(), total=len(s2_index_gdf)):
+            result = process_scene(
+                row, min_year, max_year, global_raster, resolution, x_min, y_max
             )
+            if result is not None:
+                global_raster = result
+    else:
+        # Create a ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = []
 
-        for future in tqdm(as_completed(futures), total=len(futures)):
-            try:
-                result = future.result()
-                if result is not None:
-                    global_raster = result
-            except Exception as exc:
-                print(f"Row {row} generated an exception: {exc}")  # type: ignore
+            # Submit tasks to the executor
+            for _, row in s2_index_gdf.iterrows():
+                futures.append(
+                    executor.submit(
+                        process_scene,
+                        row,
+                        min_year,
+                        max_year,
+                        global_raster,
+                        resolution,
+                        x_min,
+                        y_max,
+                    )
+                )
 
-    export_raster(global_raster, x_min, y_min, x_max, y_max, width, height, export_path)
+            for future in tqdm(as_completed(futures), total=len(futures)):
+                try:
+                    result = future.result()
+                    if result is not None:
+                        global_raster = result
+                except Exception as exc:
+                    print(f"Row {row} generated an exception: {exc}")  # type: ignore
+
+    export_raster(
+        global_raster, x_min, y_min, x_max, y_max, width, height, Path(export_path)
+    )

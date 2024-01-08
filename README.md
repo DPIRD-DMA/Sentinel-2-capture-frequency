@@ -34,18 +34,13 @@ Follow these steps to use the tool:
 
 Example:
 ```python
-from pathlib import Path
-from helpers.coordinator import get_s2_revisit_frequency
+from helpers.coordinator import build_revisit_raster
 
-process_scene_coverage(
-    export_path=Path('/path/to/output.tif'),
+build_revisit_raster(
+    export_path='output.tif',
     resolution=0.00278,
     min_year=2023,
     max_year=2023,
-    x_min=-180.0,
-    y_min=-90.0,
-    x_max=180.0,
-    y_max=90.0
 )
 ```
 
