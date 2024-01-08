@@ -3,6 +3,8 @@
 ## Overview
 This tool, developed in Python, analyzes the frequency of Sentinel-2 satellite scene coverages. It integrates the extent polygons from the Microsoft Planetary Computer to produce a global raster. Each pixel in this raster reflects the number of observations of that location in Sentinel-2 scenes.
 
+While you can run this locally, for optimal performance, it is recommended to run this tool within the Planetary Computer Hub, as most processing time involves network requests to the Planetary Computer. Learn more about the Planetary Computer here: [Planetary Computer Hub](https://planetarycomputer.microsoft.com/docs/overview/environment/).
+
 ## Features
 - Accessing and utilizing Sentinel-2 index data from Microsoft Planetary Computer.
 - Combining and rasterizing satellite scene coverage polygons.
