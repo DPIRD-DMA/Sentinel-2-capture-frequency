@@ -1,0 +1,6 @@
+*.tif.aux.xml
+*.tif
+*.gpkg
+S2 index/*
+*.pyc
+Check S2 capture frequency.ipynb

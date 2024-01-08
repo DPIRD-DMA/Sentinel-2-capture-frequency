@@ -1,0 +1,17 @@
+{
+    "cSpell.words": [
+        "astype",
+        "dtype",
+        "geopandas",
+        "iterrows",
+        "latlong",
+        "mgrs",
+        "miny",
+        "ndarray",
+        "pystac",
+        "rasterio",
+        "Rasterizes",
+        "reprojected",
+        "tqdm"
+    ]
+}
