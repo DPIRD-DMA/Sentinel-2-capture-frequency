@@ -55,9 +55,11 @@ def download_file(url: str) -> Path:
         Path: The path to the downloaded file.
     """
     local_filename = url.split("/")[-1]
+    download_folder = Path.cwd() / "S2 index"
+    download_folder.mkdir(exist_ok=True)
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
-        dl_path = Path.cwd() / f"S2 index/{local_filename}"
+        dl_path = download_folder / local_filename
         if dl_path.exists():
             return dl_path
         with open(dl_path, "wb") as f:

@@ -13,6 +13,7 @@
         "rasterio",
         "Rasterizes",
         "reprojected",
+        "shapefiles",
         "tqdm"
     ]
 }
