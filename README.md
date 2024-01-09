@@ -3,7 +3,10 @@
 ## Overview
 This tool, developed in Python, analyzes the frequency of Sentinel-2 satellite scene coverages. It integrates the extent polygons from the Microsoft Planetary Computer to produce a global raster. Each pixel in this raster reflects the number of observations of that location in Sentinel-2 scenes.
 
+![Heat map of the Sentinel-2 revisit frequency](https://github.com/DPIRD-DMA/Sentinel-2-capture-frequency/blob/main//images/S2-world-heatmap.png?raw=true)
+
 While you can run this locally, for optimal performance, it is recommended to run this tool within the Planetary Computer Hub, as most processing time involves network requests to the Planetary Computer. Learn more about the Planetary Computer here: [Planetary Computer Hub](https://planetarycomputer.microsoft.com/docs/overview/environment/).
+
 
 ## Features
 - Accessing and utilizing Sentinel-2 index data from Microsoft Planetary Computer.
