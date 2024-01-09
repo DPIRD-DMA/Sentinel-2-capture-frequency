@@ -27,12 +27,21 @@ def process_scene(
     row: Tuple[int, GeoSeries],
     min_year: int,
     max_year: int,
+    retries: int = 3,
 ):
-    scenes = get_scenes(row[1], min_year, max_year)
-    if not scenes:
-        return None
-    extents = get_coverage(scenes)
-    return extents
+    try:
+        scenes = get_scenes(row[1], min_year, max_year)
+        if not scenes:
+            return None
+        extents = get_coverage(scenes)
+        return extents
+
+    except Exception as e:
+        if retries > 0:
+            return process_scene(row, min_year, max_year, retries - 1)
+        else:
+            print(e)
+            return None
 
 
 def build_revisit_raster(
