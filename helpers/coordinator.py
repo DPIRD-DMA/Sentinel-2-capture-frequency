@@ -52,7 +52,7 @@ def build_revisit_raster(
     count_limit: Optional[int] = None,
     debug_mode: bool = False,
     scenes_path: Optional[Union[Path, str]] = None,
-) -> None:
+) -> Path:
     """
     Downloads the Sentinel-2 index, calculates the extent of a global raster based
     on specified parameters, and exports the resulting raster to a given path.
@@ -82,7 +82,9 @@ def build_revisit_raster(
         s2_index_gdf = s2_index_gdf.head(count_limit)
     if debug_mode:
         result = []
-        for row in tqdm(s2_index_gdf.iterrows(), total=len(s2_index_gdf)):
+        for row in tqdm(
+            s2_index_gdf.iterrows(), total=len(s2_index_gdf), desc="Querying scenes"
+        ):
             result.append(process_scene(row, min_year=min_year, max_year=max_year))  # type: ignore
     else:
         with ThreadPoolExecutor() as executor:
@@ -95,6 +97,7 @@ def build_revisit_raster(
                         [max_year] * len(s2_index_gdf),
                     ),
                     total=len(s2_index_gdf),
+                    desc="Querying scenes",
                 )
             )
 
@@ -113,7 +116,7 @@ def build_revisit_raster(
     height = int((y_max - y_min) / resolution)
     global_raster = np.zeros((height, width), dtype=np.uint16)
 
-    for gdf in tqdm(result):
+    for gdf in tqdm(result, desc="Rasterizing scenes"):
         if gdf is not None:
             global_raster = rasterize_scenes(
                 gdf, global_raster, resolution, x_min, y_max
@@ -122,3 +125,4 @@ def build_revisit_raster(
     export_raster(
         global_raster, x_min, y_min, x_max, y_max, width, height, Path(export_path)
     )
+    return Path(export_path)
