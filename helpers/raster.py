@@ -62,7 +62,10 @@ def rasterize_scenes(
 
         # Rasterize the polygon within its bounding box
         rasterized = rasterize(
-            [(polygon, 1)], out_shape=(bbox_height, bbox_width), transform=transform
+            [(polygon, 1)],
+            out_shape=(bbox_height, bbox_width),
+            transform=transform,
+            dtype="uint16",
         )
 
         # Get indices in the global raster
